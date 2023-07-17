@@ -215,7 +215,7 @@ void loop(void){
   if (millis() - lastSendTime > interval) {
     sender();
     lastSendTime = millis();
-    interval = 1000;
+    interval = 1500;
     LoRaRadio.receive();
   }
 }

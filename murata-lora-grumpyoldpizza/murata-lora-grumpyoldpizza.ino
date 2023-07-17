@@ -27,20 +27,18 @@ String message = "";
 
 int receivedACK = 0;
 int packageSent = 0;
-float previous_bpm = 0;
-float previous_ox_sat = 0;
-float current_bpm;
-float current_ox_sat;
+int previous_bpm = 0;
+int previous_ox_sat = 0;
+int current_bpm;
+int current_ox_sat;
+int nivel;
 
-float ox_sat_levels[4] = {96, 94, 92};
+int ox_sat_levels[4] = {96, 94, 92};
 float bpm_level1[2] = {51, 90};
 float bpm_level2[2] = {41, 110};
 float bpm_level3 = 130;
 
 static void myReceive(void);
-
-
-// Global Variables
 
 TimerMillis myReceivePrintTimer, mySendTimer, mySendPrintTimer;
 long lastSendTime = 0;
@@ -93,7 +91,7 @@ void sendMessageLoRa(void) {
       //patient is under level 3
       //Serial.println("Level 3 bpm");
       current_bpm = 3;
-    }else if (bpm.toFloat() < bpm_level2[0] or bpm.toFloat() > bpm_level2[1]) {
+    }else if (bpm.toFloat() < bpm_level2[0] or bpm.toFloat() >= bpm_level2[1]) {
       //patient is under level 2
       current_bpm = 2;
       //Serial.println("Level 2 bpm");
@@ -106,15 +104,15 @@ void sendMessageLoRa(void) {
       //Serial.println("Level 0 bpm");
     }
 
-    if (ox_sat.toFloat() < ox_sat_levels[2]) {
+    if (ox_sat.toInt() <= ox_sat_levels[2]) {
       //patient is under level 3
       current_ox_sat = 3;
       //Serial.println("Level 1 So2");
-    }else if (ox_sat.toFloat() < ox_sat_levels[1]) {
+    }else if (ox_sat.toInt() <= ox_sat_levels[1]) {
       //patient is under level 2
       current_ox_sat = 2;
       //Serial.println("Level 2 So2");
-    }else if (ox_sat.toFloat() < ox_sat_levels[0]) {
+    }else if (ox_sat.toInt() <= ox_sat_levels[0]) {
       //patient is under level 1
       current_ox_sat = 1;
       //Serial.println("Level 3 So2");
@@ -123,13 +121,19 @@ void sendMessageLoRa(void) {
       current_ox_sat = 0;
       //Serial.println("Level 0 So2");
     }
-
+    
     Serial.println(previous_bpm);
     Serial.println(current_bpm);
     Serial.println(previous_ox_sat); 
     Serial.println(current_ox_sat);
     
     if (current_bpm != previous_bpm or current_ox_sat != previous_ox_sat) {
+
+      if (current_bpm >= current_ox_sat) {
+        nivel = current_bpm;
+      }else {
+        nivel = current_ox_sat;
+      }
       
       //Must send LoRa message
       previous_bpm = current_bpm;
@@ -140,8 +144,9 @@ void sendMessageLoRa(void) {
         //Serial.println(bpm);
       }
 
-      message = "F-" + bpm + "-" + ox_sat;
-      //message = "F-122.69-94.00";
+      message = "F-" + bpm + "-" + ox_sat.toInt() + "-" + nivel;
+      //Serial.println(message);
+      //message = "F-122.69-94.00-3";
 
       packageSent++;
       
